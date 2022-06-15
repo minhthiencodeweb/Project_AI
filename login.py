@@ -89,12 +89,12 @@ class Login_Window:
         registerbtn.place(x=10, y=370, width=160)
 
     def rigister_window(self):
-        self.new_window1=Toplevel(self.root)
-        self.app=Register(self.new_window1)
+        self.new_window=Toplevel(self.root)
+        self.app=Register(self.new_window)
 
     def face_id(self):
-        self.new_window2 = Toplevel(self.root)
-        self.app = Face_recognition_admin(self.new_window2)
+        self.new_window = Toplevel(self.root)
+        self.app = Face_recognition_admin(self.new_window)
 
     def login(self):
         if self.txtuser.get()=="" or self.txtpass.get()=="":
@@ -358,3 +358,6 @@ class Register:
 if __name__=="__main__":
     main()
     face_recognition_admin()
+    # root=Tk()
+    # obj=Login_Window(root)
+    # root.mainloop()

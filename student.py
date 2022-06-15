@@ -354,7 +354,7 @@ class Student:
                                                                                                                 self.var_address.get(),
                                                                                                                 self.var_teacher.get(),
                                                                                                                 self.var_radio1.get(),
-                                                                                                                                    ))
+                                                                                                                                    ))      #vị trí tương ứng với SQL
                 conn.commit()
                 self.fetch_data()
                 conn.close()
@@ -362,7 +362,7 @@ class Student:
             except Exception as es:
                 messagebox.showerror("Error",f"Due to :{str(es)}",parent=self.root)
 
-    #=================fetch data===============
+    #=================fetch data=============== hiển thị lên table
     def fetch_data(self):
         conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123",database="face_recognizer")
         my_cursor = conn.cursor()
@@ -442,14 +442,14 @@ class Student:
     def delete_data(self):
         if self.var_std_id.get()=="":
             messagebox.showerror("Error", "Student id must be required", parent=self.root)
-        else:
+        else:    #trả về id
             try:
                 delete=messagebox.askyesno("Student Delete Page","Do you want to delete this student",parent=self.root)
                 if delete>0:
                     conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123", database="face_recognizer")
                     my_cursor = conn.cursor()
                     sql="delete from student where Student_id=%s"
-                    val=(self.var_std_id.get(),)
+                    val=(self.var_std_id.get(),)    #giá trị nhận dc để xóa
                     my_cursor.execute(sql,val)
                 else:
                     if not delete:
@@ -504,19 +504,19 @@ class Student:
 
 
 
-#=============================Generate data set or Take photo Samples================
+#=============================Generate data set or Take photo Samples================ cố định id cho 1 người 1 ảnh
     def generate_dataset(self):
         if self.var_dep.get()=="Select Department" or self.var_std_name.get()=="" or self.var_std_id.get()=="":
             messagebox.showerror("Error","All Feilds are required",parent=self.root)
         else:
             try:
                 conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123", database="face_recognizer")
-                my_cursor = conn.cursor()
-                my_cursor.execute("select * from student")
-                myresult=my_cursor.fetchall()
+                my_cursor = conn.cursor()                     #duyệt từng hàng
+                my_cursor.execute("select * from student")    #chọn các bảng ghi từ student và trả về kết quả
+                myresult=my_cursor.fetchall()                 #trả về 1 bộ giá trị
                 id=0
-                for x in myresult:
-                    id+=1
+                for x in myresult:                          #mỗi lần duyệt 1 bộ giá trị thì sẽ gán với 1 id
+                    id+=1                                   #id+=1 theo thứ tự lấy ảnh
                 my_cursor.execute("update student set Dep=%s, course=%s,Year=%s,Semester=%s,Name=%s,Division=%s,Roll=%s,Gender=%s,Dob=%s,Email=%s,Phone=%s,Address=%s,Teacher=%s,PhotoSample=%s where Student_id=%s",(
                                                                                                                                             self.var_dep.get(),
                                                                                                                                             self.var_course.get(),
@@ -532,22 +532,21 @@ class Student:
                                                                                                                                             self.var_address.get(),
                                                                                                                                             self.var_teacher.get(),
                                                                                                                                             self.var_radio1.get(),
-                                                                                                                                            self.var_std_id.get()==id+1
+                                                                                                                                            self.var_std_id.get()==id+1       #giá trị nhập vào phải trùng với thứ tự id(dùng để phân biệt với các ảnh khác) ==>True
 
                                                                                                                                         ))
                 conn.commit()
                 self.fetch_data()
                 self.reset_data()
                 conn.close()
-
-                #=========================Load predifiend data on face frontals from opencv ===========
-                face_classifier=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                #=========================Load predifiend data on face frontals from opencv ===========  lấy ảnh vào thư mục data
+                face_classifier=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")   #phát hiện khuôn mặt (các đặc điểm khuôn mặt có trong tệp haarcascade_frontalface_default)
 
                 def face_cropped(img):
-                    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-                    faces=face_classifier.detectMultiScale(gray,1.3,5)
-                    #scaling factor=1.3
-                    #Minimum Neighbor=5
+                    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)  #Hình ảnh thang màu xám được cho là sẽ cải thiện hiệu quả của thuật toán.
+                    faces=face_classifier.detectMultiScale(gray,1.3,5) #phát hiện các khuôn mặt tỉ lệ xám được xác định trong classifier .Nếu các khuôn mặt được tìm thấy, nó sẽ trả về vị trí của các khuôn mặt được phát hiện dưới dạng Rect (x, y, w, h).
+                    #scaling factor=1.3   Tham số này chỉ định yếu tố mà hình ảnh được thu nhỏ  ( scaleFactor càng nhỏ thì độ chính xác càng lớn và chi phí tính toán càng cao.)
+                    #Minimum Neighbor=5   là số lần tối thiểu một vùng phải được xác định như một khuôn mặt.
 
                     for(x,y,w,h) in faces:
                         face_cropped=img[y: y+h, x:x+w]
@@ -557,12 +556,12 @@ class Student:
                 img_id=0
                 while True:
                     ret, my_frame=cap.read()
-                    if face_cropped(my_frame) is not None:
+                    if face_cropped(my_frame) is not None:     #bắt buột phải phát hiện khuôn mặt
                         img_id+=1
                         face=cv2.resize(face_cropped(my_frame),(450,450))
                         face=cv2.cvtColor(face,cv2.COLOR_BGR2GRAY)
-                        file_name_path="data/user."+str(id)+"."+str(img_id)+".jpg"
-                        cv2.imwrite(file_name_path,face)
+                        file_name_path="data/user."+str(id)+"."+str(img_id)+".jpg"   #data/user.2.1.jpg
+                        cv2.imwrite(file_name_path,face)                             #cố định ảnh vào đường dẫn
                         cv2.putText(face,str(img_id),(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(0,255,0),2)
                         cv2.imshow("Crooped Face", face)
 

@@ -13,16 +13,16 @@ from main import Face_Recognition_System
 # from login import Login_Window
 
 
-def main():
-    win=Tk()
-    app=Face_recognition_admin(win)
-    win.mainloop()
+# def main():
+#     win=Tk()
+#     app=Face_recognition_admin(win)
+#     win.mainloop()
 
 # def login():
 #     win=Tk()
 #     app=Face_recognition_admin(win)
 #     win.mainloop()
-
+lis=[]
 
 #face ID login
 class Face_recognition_admin:
@@ -53,9 +53,21 @@ class Face_recognition_admin:
 
 
     def num1(self,ye):
-        if ye == 1:
-            self.new_window = Toplevel(self.root)
-            self.app = Face_Recognition_System(self.new_window)
+        count=0
+        while True:
+            count+=1
+            if ye ==1:
+                if count ==100:
+                    self.new_window = Toplevel(self.root)
+                    self.app = Face_Recognition_System(self.new_window)
+                    break
+
+
+
+
+        # if ye == 1:
+        #     self.new_window = Toplevel(self.root)
+        #     self.app = Face_Recognition_System(self.new_window)
 
     def num2(self,no):
         if no == 2:
@@ -78,7 +90,7 @@ class Face_recognition_admin:
 
 
     #=========face recognition============
-
+    #Id trong database là varchar(45)
     def face_recog(self):
         def draw_boundray(img,classifier_admin,scaleFactor,minNeighbors,color,text,clf):
             gray_image=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -90,7 +102,6 @@ class Face_recognition_admin:
                 cv2.rectangle(img,(x,y), (x + w, y + h),(0,255,0),3)
                 id, predict=clf.predict(gray_image[y: y+h, x: x+w])
                 confidence=int((100*(1-predict/300)))
-                print(confidence)
 
                 conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123",database="systerm_admin")
                 my_cursor = conn.cursor()
@@ -109,7 +120,8 @@ class Face_recognition_admin:
                     cv2.putText(img, f"Id:{i}", (x, y - 55), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 3)
                     cv2.putText(img, f"Name:{n}", (x, y - 30), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 3)
                     # self.mark_attendance(i,n)
-                    self.num1(1)
+                    lis.append(1)
+
 
                 else:
                     cv2.rectangle(img,(x, y), (x + w, y + h), (0, 0, 255), 3)
@@ -131,12 +143,16 @@ class Face_recognition_admin:
 
         video_cap=cv2.VideoCapture(0)
 
+        img_id=0
         while True:
             ret, img=video_cap.read()
+            img_id+=1
             img=recognize(img, clf, faceCascade)
             cv2.imshow("Welcome To Face Recognition",img)
 
-            if ((cv2.waitKey(500))):
+            if (cv2.waitKey(1)==13 or (img_id == 50)):
+                if lis[0]==1:
+                    self.num1(1)
                 break
 
         video_cap.release()
@@ -146,8 +162,9 @@ class Face_recognition_admin:
 
 
 if __name__=="__main__":
-    # login()
-    main()
+    root=Tk()
+    obj=Face_recognition_admin(root)
+    root.mainloop()
 
 
 

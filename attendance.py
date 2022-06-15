@@ -9,7 +9,7 @@ import csv
 import shutil
 from tkinter import filedialog
 import os ,string ,time
-from ctypes import windll
+from send_gmail import Attach
 
 mydata=[]
 
@@ -18,6 +18,10 @@ def diff(list1, list2):
     list_difference = [item for item in list1 if item not in list2]
     return list_difference
 
+# def send_gmail():
+#     win=Tk()
+#     app=Attendance(win)
+#     win.mainloop()
 
 class Attendance:
     def __init__(self,root):
@@ -161,7 +165,7 @@ class Attendance:
         take_photo_btn = Button(btn_frame1,command=self.usb_data, text="Send to USB ", width=35, font=("times new roman", 13, "bold"), bg="blue", fg="white")
         take_photo_btn.grid(row=0, column=0)
 
-        update_photo_btn = Button(btn_frame1, text="Send to Gmail ", width=35, font=("times new roman", 13, "bold"), bg="blue", fg="white")
+        update_photo_btn = Button(btn_frame1,command=self.send_gmail, text="Send to Gmail ", width=35, font=("times new roman", 13, "bold"), bg="blue", fg="white")
         update_photo_btn.grid(row=0, column=1)
 
 
@@ -316,6 +320,9 @@ class Attendance:
                     messagebox.showerror("Error", f"Due to :{str(es)}", parent=self.root)
                 break
 
+    def send_gmail(self):
+        self.new_window=Toplevel(self.root)
+        self.app=Attach(self.new_window)
 
 
 if __name__=="__main__":

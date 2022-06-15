@@ -6,10 +6,10 @@ import mysql.connector
 import cv2
 from train_admin import Train_admin
 
-def train_admin():
-    win=Tk()
-    app=adminstator(win)
-    win.mainloop()
+# def train_admin():
+#     win=Tk()
+#     app=adminstator(win)
+#     win.mainloop()
 
 
 class adminstator:
