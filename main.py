@@ -5,14 +5,18 @@ import tkinter
 import os
 from time import strftime
 from datetime import datetime
-from student import Student
-from train import Train
+from student_info import Student
+# from train import Train
 from face_recognition import Face_recognition
 from attendance import Attendance
 from developer import Developer
 from help import Help
 from add_admin import adminstator
-
+from tkinter import messagebox
+import mysql.connector
+import cv2
+import os
+import numpy as np
 
 
 class Face_Recognition_System:
@@ -55,15 +59,15 @@ class Face_Recognition_System:
         title_lbl=Label(bg_img,text="FACE REOCOGNITION ATTENDANCE SYSTEM SOFTWARE",font=("times new roman",33,"bold"),bg="white",fg="red")
         title_lbl.place(x=0,y=0,width=1530, height=45)
 
-        #==================time============================
-        def time():
-            string= strftime('%H:%M:%S %p')
-            lbl.config(text = string)
-            lbl.after(1000,time)
-
-        lbl = Label(title_lbl, font=('times new roman',14,'bold'),background='white',foreground='blue')
-        lbl.place(x=0,y=0,width=110, height=50)
-        time()
+        # #==================time============================
+        # def time():
+        #     string= strftime('%H:%M:%S %p')
+        #     lbl.config(text = string)
+        #     lbl.after(1000,time)
+        #
+        # lbl = Label(title_lbl, font=('times new roman',14,'bold'),background='white',foreground='blue')
+        # lbl.place(x=0,y=0,width=110, height=50)
+        # time()
 
 
         #student button
@@ -173,10 +177,35 @@ class Face_Recognition_System:
         self.new_window=Toplevel(self.root)
         self.app=Student(self.new_window)
 
-
     def train_data(self):
-        self.new_window=Toplevel(self.root)
-        self.app=Train(self.new_window)
+        data_dir=("data")
+        path=[os.path.join(data_dir,file) for file in os.listdir(data_dir)]
+
+        faces=[]
+        ids=[]
+
+        for image in path:
+            img=Image.open(image).convert('L')
+            imageNp=np.array(img,'uint8')
+            id=int(os.path.split(image)[1].split('.')[1])
+
+
+            faces.append(imageNp)
+            ids.append(id)
+            cv2.imshow("Training",imageNp)
+
+            cv2.waitKey(1)==13
+        ids=np.array(ids)
+        #===========Train the classifier And save========
+        clf=cv2.face.LBPHFaceRecognizer_create()
+        clf.train(faces,ids)
+        clf.write("classifier.xml")
+        cv2.destroyAllWindows()
+        messagebox.showinfo("Result","Training datasets completed!!",parent=self.root)
+
+    # def train_data(self):
+    #     self.new_window=Toplevel(self.root)
+    #     self.app=Train(self.new_window)
 
 
     def face_data(self):

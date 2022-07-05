@@ -8,6 +8,8 @@ from datetime import datetime
 import cv2
 import os
 import numpy as np
+listdata=[]
+mylist = []
 
 
 class Face_recognition:
@@ -21,19 +23,19 @@ class Face_recognition:
 
         #1st image
         img_top=Image.open(r"college_images\face_detector1.jpg")
-        img_top=img_top.resize((650,700), Image.ANTIALIAS)
+        img_top=img_top.resize((650,710), Image.ANTIALIAS)
         self.photoimg_top=ImageTk.PhotoImage(img_top)
 
         f_lbl=Label(self.root,image=self.photoimg_top)
-        f_lbl.place(x=0, y=55, width=650, height=700)
+        f_lbl.place(x=0, y=55, width=650, height=710)
 
         #2st image
         img_bottom=Image.open(r"college_images\facial_recognition-large.jpg")
-        img_bottom=img_bottom.resize((950,700), Image.ANTIALIAS)
+        img_bottom=img_bottom.resize((950,710), Image.ANTIALIAS)
         self.photoimg_bottom=ImageTk.PhotoImage(img_bottom)
 
         f_lbl=Label(self.root,image=self.photoimg_bottom)
-        f_lbl.place(x=650, y=55, width=950, height=700)
+        f_lbl.place(x=650, y=55, width=950, height=710)
 
         #button
         b1_1=Button(f_lbl, text="Face Recognition",command=self.face_recog,cursor="hand2",font=("times new roman",18,"bold"),bg="darkgreen",fg="white")
@@ -41,68 +43,97 @@ class Face_recognition:
 
 
 
-    #=================attendance===================xuất file csv
-    def mark_attendance(self,r,n,d):
-        with open("attend.csv","r+",newline="\n") as f:
-            myDataList=f.readlines()
-            name_list=[]
+    def attend_absent_attendance(self,i, n, d):
+        global namee
+        with open("attend.csv", "r+", newline="\n") as f:
+            myDataList = f.readlines()
+            name_list = []
+
             for line in myDataList:
-                entry=line.split((","))
+                entry = line.split((","))
                 name_list.append(entry[0])
-            if((r not in name_list) and (n not in name_list) and (d not in name_list)  ):
-                now=datetime.now()
-                d1=now.strftime("%d/%m/%Y")
-                dtString=now.strftime("%H:%M:%S")
-                f.writelines(f"\n{r},{n},{d},{dtString},{d1},Preset")
+
+            if ((i not in name_list) ):
+                listdata.append(i)
+                now = datetime.now()
+                d1 = now.strftime("%d/%m/%Y")
+                dtString = now.strftime("%H:%M:%S")
+                f.writelines(f"\n{i},{n},{d},{dtString},{d1},YES")
+                mystring = ",".join(listdata)
+
+                conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123",database="face_recognizer")
+                my_cursor = conn.cursor()
+                my_cursor.execute("SELECT Id, Name, Dep FROM studentinfo WHERE Id NOT IN (" + mystring + ")")
+                namee = my_cursor.fetchall()
+
+        with open('absent.csv', 'w', newline="\n") as p:
+            if 'namee' in globals():
+                for idd, naa, dee in namee:
+                    now = datetime.now()
+                    d1 = now.strftime("%d/%m/%Y")
+                    dtString = now.strftime("%H:%M:%S")  # đẩy ra giờ phút giây
+                    p.writelines(f"\n{idd},{naa},{dee},{dtString},{d1},NO")
 
 
-    #=========face recognition=====Hàm này có chức năng so sánh hình ảnh khuôn mặt đầu vào với tất cả các đặc trưng khuôn mặt từ file xml với mục đích tìm ra người dùng phù hợp với khuôn mặt đó. Sau đó tìm ra thông tin sinh viên trong cơ sở dữ liệu dựa trên msv tìm được
+    #=================attendance===================
+    # def mark_attendance(self,i,n,d):
+    #     with open("attend.csv","r+",newline="\n") as f:
+    #         myDataList=f.readlines()
+    #         name_list=[]
+    #         for line in myDataList:
+    #             entry=line.split((","))
+    #             name_list.append(entry[0])
+    #
+    #         if((i not in name_list)):
+    #             now=datetime.now()
+    #             d1=now.strftime("%d/%m/%Y")
+    #             dtString=now.strftime("%H:%M:%S")
+    #             f.writelines(f"\n{i},{n},{d},{dtString},{d1},YES")
+
+
+
+
+    #=========face recognition====
 
     def face_recog(self):
-        def draw_boundray(img,classifier,scaleFactor,minNeighbors,color,text,clf):      #(image input, phát hiện khuôn mặt,thu nhỏ ảnh,số lần tối thiểu, màu sắc , nội dung, nhận dạng khuôn mặt)
-            gray_image=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                            #chuyển thành màu xám
-            features=classifier.detectMultiScale(gray_image,scaleFactor,minNeighbors)   #phát hiện khuôn mặt
-            #phát hiện khuôn mặt trên camera
+        def draw_boundray(img,classifier,scaleFactor,minNeighbors,color,text,clf):
+            gray_image=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            features=classifier.detectMultiScale(gray_image,scaleFactor,minNeighbors)
             coord=[]
 
             for(x,y,w,h) in features:
-                cv2.rectangle(img,(x,y), (x + w, y + h),(0,255,0),2)  #tạo 1 hình chữ nhật màu xanh lá, độ dày đường viền là 2
-                id, predict=clf.predict(gray_image[y: y+h, x: x+w])   #Dự đoán id của người dùng (predict ==>trả về độ chính xác(sai số) khi so sánh với file .xml)
-                # print(id)
-                # print(predict) # càng nhỏ thì càng nhận diện được  Khoảng tin cậy nhỏ hơn : Ước tính chính xác hơn.Khoảng tin cậy lớn hơn : Ước tính kém chính xác hơn
-                confidence=int((100*(1-predict/300)))   #300 là kích thước của mẫu (kích thước mẫu càng lớn thì càng dễ nhận diện)
-
+                cv2.rectangle(img,(x,y), (x + w, y + h),(0,255,0),2)
+                id, predict=clf.predict(gray_image[y: y+h, x: x+w])
+                confidence=int((100*(1-predict/300)))
                 conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123",database="face_recognizer")
                 my_cursor = conn.cursor()
 
 
-                my_cursor.execute("select Name from student where Student_id="+str(id))
+                my_cursor.execute("select Name from studentinfo where Stt_s="+str(id))
                 n=my_cursor.fetchone()
                 n="+".join(n)
 
 
-                my_cursor.execute("select Roll from student where Student_id="+str(id))
-                r=my_cursor.fetchone()
-                r="+".join(r)
+                my_cursor.execute("select Id from studentinfo where Stt_s="+str(id))
+                i=my_cursor.fetchone()
+                i="+".join(i)
 
-                my_cursor.execute("select Dep from student where Student_id="+str(id))
+                my_cursor.execute("select Dep from studentinfo where Stt_s="+str(id))
                 d=my_cursor.fetchone()
                 d="+".join(d)
 
-                # my_cursor.execute("select Student_id from student where Student_id="+str(id))
-                # i=my_cursor.fetchone()
-                # i="+".join(i)
+                # my_cursor.execute("select Stt_s from studentinfo where Stt_s="+str(id))
+                # r=my_cursor.fetchone()
+                # r="+".join(r)
 
 
 
                 if confidence > 80:
-                    #(image input,nội dung chèn,tọa độ text,font chữ, kích cỡ, màu chữ,độ dày)
                     # cv2.putText(img, f"O.N:{i}", (x, y - 75), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
-                    cv2.putText(img, f"Student_ID:{r}", (x, y - 55), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
+                    cv2.putText(img, f"Student_ID:{i}", (x, y - 55), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
                     cv2.putText(img, f"Name:{n}", (x, y - 30), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
                     cv2.putText(img, f"Deparment:{d}", (x, y - 5), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
-                    self.mark_attendance(r,n,d)
-
+                    self.attend_absent_attendance(i,n,d)
 
                 else:
                     cv2.rectangle(img,(x, y), (x + w, y + h), (0, 0, 255), 2)
@@ -117,19 +148,29 @@ class Face_recognition:
             coord = draw_boundray(img, faceCascade, 1.1, 10, (255,25,255),"Face", clf)
             return img
 
-        faceCascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")  #phát hiện khuôn mặt
-        clf=cv2.face.LBPHFaceRecognizer_create()                                   #công cụ nhận dạng khuôn mặt
-        clf.read("classifier.xml")                                                 #đọc file xml
+        faceCascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+        clf=cv2.face.LBPHFaceRecognizer_create()
+        clf.read("classifier.xml")
 
         video_cap=cv2.VideoCapture(0)
-
+        count_id = 0
         while True:
+            count_id+=1
             ret, img=video_cap.read()
             img=recognize(img, clf, faceCascade)
+            img=cv2.resize(img,(1300,790))
             cv2.imshow("Welcome To Face Recognition",img)
 
-            if (cv2.waitKey(1) == 13):
+            if (cv2.waitKey(1) == 13) or (count_id == 100):
                 break
+
+        file1 = open("attend.csv", "a")
+        file2 = open("absent.csv", "r")
+        for line in file2:
+            file1.write(line)
+
+        file1.close()
+        file2.close()
         video_cap.release()
         cv2.destroyAllWindows()
 

@@ -7,25 +7,21 @@ import time
 import datetime
 import mysql.connector
 from main import Face_Recognition_System
-from face_recognition_admin import Face_recognition_admin
+# from face_recognition_admin import Face_recognition_admin
+import cv2
 
-
-def main():
-    win=Tk()
-    app=Login_Window(win)
-    win.mainloop()
-
-def face_recognition_admin():
-    win=Tk()
-    app=Login_Window(win)
-    win.mainloop()
+#
+# def face_recognition_admin():
+#     win=Tk()
+#     app=Login_Window(win)
+#     win.mainloop()
 
 
 class Login_Window:
     def __init__(self,root):
         self.root=root
-        self.root.title("Login")
-        self.root.geometry("1550x800+0+0")
+        self.root.title("Login")          #tiêu đề cửa sổ
+        self.root.geometry("1550x800+0+0")  #kích thước của cửa sổ
 
 
         self.bg=ImageTk.PhotoImage(file=r"C:\Users\PC_MINH THIEN\PycharmProjects\PythonProjectAI2\college_images\WallpaperPlay.jpg")
@@ -92,9 +88,84 @@ class Login_Window:
         self.new_window=Toplevel(self.root)
         self.app=Register(self.new_window)
 
+    def num1(self, ye):
+        if ye == 1:
+            self.new_window = Toplevel(self.root)
+            self.app = Face_Recognition_System(self.new_window)
+
+    def num2(self, no):
+        if no == 2:
+            self.root.destroy()
     def face_id(self):
-        self.new_window = Toplevel(self.root)
-        self.app = Face_recognition_admin(self.new_window)
+        def draw_boundray(img, classifier_admin, scaleFactor, minNeighbors, color, text, clf):
+            gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            features = classifier_admin.detectMultiScale(gray_image, scaleFactor, minNeighbors)
+
+            coord = []
+
+            for (x, y, w, h) in features:
+                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                id, predict = clf.predict(gray_image[y: y + h, x: x + w])
+                confidence = int((100 * (1 - predict / 300)))
+
+                conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123",
+                                                   database="systerm_admin")
+                my_cursor = conn.cursor()
+
+                my_cursor.execute("select Id from adminstrator where On_s=" + str(id))
+                i = my_cursor.fetchone()
+                i = "+".join(i)
+
+                my_cursor.execute("select Name from adminstrator where On_s=" + str(id))
+                n = my_cursor.fetchone()
+                n = "+".join(n)
+
+                if confidence > 80:
+                    cv2.putText(img, f"Id:{i}", (x, y - 55), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
+                    cv2.putText(img, f"Name:{n}", (x, y - 30), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
+                    self.num1(1)
+                else:
+                    cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                    cv2.putText(img, "Unknow", (x, y - 5), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
+                    self.num2(2)
+
+                coord = [x, y, w, h]
+            return coord
+
+        def recognize(img, clf, faceCascade):
+            coord = draw_boundray(img, faceCascade, 1.1, 10, (255, 255, 255), "Face", clf)
+            return img
+
+        faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+        clf = cv2.face.LBPHFaceRecognizer_create()
+        clf.read("classifier_admin.xml")
+
+        def face_cropped(img):
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = faceCascade.detectMultiScale(gray, 1.3, 5)
+
+            for (x, y, w, h) in faces:
+                face_cropped = img[y: y + h, x:x + w]
+                return face_cropped
+
+        video_cap = cv2.VideoCapture(0)
+        img_id = 0
+        while True:
+            ret, img = video_cap.read()
+            if face_cropped(img) is not None:
+                img_id += 1
+                img = recognize(img, clf, faceCascade)
+                cv2.imshow("Welcome To Face Recognition", img)
+
+                if (cv2.waitKey(1) == 13 or (img_id == 1)):
+                    time.sleep(3)
+                    break
+
+        video_cap.release()
+        cv2.destroyAllWindows()
+
+        # self.new_window = Toplevel(self.root)
+        # self.app = Face_recognition_admin(self.new_window)
 
     def login(self):
         if self.txtuser.get()=="" or self.txtpass.get()=="":
@@ -115,8 +186,8 @@ class Login_Window:
             else:
                 open_main=messagebox.askyesno("YesNo","Access only admin")
                 if open_main > 0:
-                    self.new_window3=Toplevel(self.root)
-                    self.app=Face_Recognition_System(self.new_window3)
+                    self.new_window=Toplevel(self.root)
+                    self.app=Face_Recognition_System(self.new_window)
                 else:
                     if not open_main:
                         return
@@ -356,8 +427,7 @@ class Register:
 
 
 if __name__=="__main__":
-    main()
-    face_recognition_admin()
-    # root=Tk()
-    # obj=Login_Window(root)
-    # root.mainloop()
+    win=Tk()                #tạo cửa số mới
+    app=Login_Window(win)   #chương trình chạy
+    win.mainloop()          # mainloop () là một vòng lặp vô hạn dùng để hiển thị cửa sổ, đợi một sự kiện xảy ra và xử lý sự kiện miễn là cửa sổ chưa được đóng.
+

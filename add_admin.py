@@ -187,7 +187,7 @@ class adminstator:
 
         self.var_com_search=StringVar()
         search_combo=ttk.Combobox(Search_frame,textvariable=self.var_com_search,font=("times new roman",13,"bold"),state="readonly",width=15)
-        search_combo["values"]=("Select","Roll","Phone")
+        search_combo["values"]=("Select","Id","Phone")
         search_combo.current(0)
         search_combo.grid(row=0,column=1,padx=2,pady=10,sticky=W)
 
@@ -196,7 +196,7 @@ class adminstator:
         search_entry.grid(row=0, column=2, padx=10, pady=5, sticky=W)
 
         # ------------
-        search_btn = Button(Search_frame, text="Search", width=12, font=("times new roman", 12, "bold"), bg="blue", fg="white")
+        search_btn = Button(Search_frame, text="Search", width=12,command=self.search_data, font=("times new roman", 12, "bold"), bg="blue", fg="white")
         search_btn.grid(row=0, column=3, padx=4)
 
         showAll_btn = Button(Search_frame, text="Show All", width=12, font=("times new roman", 12, "bold"), bg="blue", fg="white")
@@ -378,7 +378,7 @@ class adminstator:
             try:
                 conn = mysql.connector.connect(host="localhost", username="root", password="Thien@123",database="systerm_admin")
                 my_cursor = conn.cursor()
-                my_cursor.execute("select * from student where "+str(self.var_com_search.get())+" LIKE '%" +str(self.var_search.get())+"%'")
+                my_cursor.execute("select * from adminstrator where "+str(self.var_com_search.get())+" LIKE '%" +str(self.var_search.get())+"%'")
                 data=my_cursor.fetchall()
                 if len(data)!=0:
                     self.student_table.delete(*self.student_table.get_children())
@@ -448,7 +448,7 @@ class adminstator:
                         break
                 cap.release()
                 cv2.destroyAllWindows()
-                messagebox.showinfo("Result","Generating data sets compled!!!!")
+                messagebox.showinfo("Result","Generating data sets compled!!!!", parent=self.root)
             except Exception as es:
                 messagebox.showerror("Error", f"Due to :{str(es)}", parent=self.root)
 

@@ -5,6 +5,9 @@ from tkinter import filedialog
 from email.message import EmailMessage
 from tkinter import messagebox
 import smtplib
+import os
+
+
 
 #https://www.google.com/settings/security/lesssecureapps
 attachments = []
@@ -105,6 +108,7 @@ class Attach:
             to = self.temp_receiver.get()
             subject = self.temp_subject.get()
             body = self.temp_body.get()
+
             msg['subject'] = subject
             msg['from'] = username
             msg['to'] = to
@@ -121,7 +125,7 @@ class Attach:
                 return
 
             if username=="" or password=="" or to=="" or subject =="" or body=="":
-                messagebox.showinfo("Please", "Please fill in all required information", parent=self.root)
+                messagebox.showerror("Please", "Please fill in all required information", parent=self.root)
                 return
             else:
                 server = smtplib.SMTP('smtp.gmail.com',587)
@@ -129,8 +133,8 @@ class Attach:
                 server.login(username,password)
                 server.send_message(msg)
                 messagebox.showinfo("Success", "Email has been sent successfully", parent=self.root)
-        except Exception as es:
-            messagebox.showerror("Error", f"Due to :{str(es)}", parent=self.root)
+        except :
+            messagebox.showerror("Error", "You have not attached the file to send", parent=self.root)
 
     def reset(self):
         self.temp_username.set("")
@@ -141,8 +145,10 @@ class Attach:
 
 
     def attachFile(self):
-        filename = filedialog.askopenfilename(initialdir='C:/Users/PC_MINH THIEN/PycharmProjects/PythonProjectAI2',title='Select a file')
+        filename = filedialog.askopenfilename(initialdir=os.getcwd(),title='Select a file',filetypes=(("CSV File","*.csv"),("ALL File","*.*")),parent=self.root)
         attachments.append(filename)
+        messagebox.showinfo("Data Export","Your data attach to "+os.path.basename(filename)+" successfully",parent=self.root)
+
 
 
 if __name__=="__main__":

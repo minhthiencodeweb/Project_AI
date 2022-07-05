@@ -52,7 +52,7 @@ class Train_admin:
         clf.train(faces,ids)
         clf.write("classifier_admin.xml")
         cv2.destroyAllWindows()
-        # messagebox.showinfo("Result","Training datasets completed!!")
+        messagebox.showinfo("Result","Training datasets completed!!", parent=self.root)
 
 
 
